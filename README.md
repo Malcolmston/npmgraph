@@ -139,3 +139,106 @@ $ cd npmgraph
 $ npm install
 $ npm start
 ```
+
+---
+
+## Local development & deployment (this fork)
+
+This is a fork of [npmgraph](https://github.com/npmgraph/npmgraph) with a number of
+local additions: a Docker Compose deployment, a graph-database backend, an MCP
+server, and some extra app features. Everything above still applies; this section
+documents what's specific to this fork.
+
+### Package manager
+
+This fork uses **pnpm** (the version is pinned via the `packageManager` field in
+`package.json`). If you have a recent Node.js, enable it with `corepack enable`.
+
+```shell
+pnpm install        # install dependencies
+pnpm start          # Parcel dev server on http://localhost:1234
+pnpm build          # production build into ./dist
+pnpm test           # format + lint + typecheck + unit tests + build
+```
+
+### Docker Compose
+
+The repo ships a `docker-compose.yml` with several services and profiles.
+
+**Production build (default):**
+
+```shell
+docker compose up --build
+```
+
+This builds the static site with Parcel and serves it via nginx. The web app is
+published on host port **8091** (`http://localhost:8091`). Pass
+`--build-arg`/`BUGSNAG_KEY` to bake in a Bugsnag key at build time.
+
+**Hot-reload dev server (`dev` profile):**
+
+```shell
+docker compose --profile dev up dev
+```
+
+Runs the Parcel dev server in a container with the source bind-mounted, on
+`http://localhost:1234`.
+
+**Graph backend (`graph` profile):**
+
+```shell
+docker compose --profile graph up neo4j        # just the Neo4j database
+docker compose --profile graph run --rm mcp    # the MCP server (stdio)
+docker compose --profile graph up              # neo4j + mcp + api together
+```
+
+This brings up:
+
+- **Neo4j** (`neo4j:5-community`) — Browser at `http://localhost:7474`, bolt at
+  `bolt://localhost:7687`.
+- **mcp** — the MCP server (see below), talking to Neo4j over stdio.
+- **api** — the HTTP API on port **3100**, which backs the web app's impact
+  queries and share links. nginx proxies `/api` to this service, so in the
+  production container the API is reachable at `http://localhost:8091/api/...`.
+
+**Public tunnel (ngrok):** an `ngrok` service can expose the web app on a
+shareable https URL. It needs an ngrok authtoken — set `NGROK_AUTHTOKEN` in your
+environment or `.env`. The ngrok inspector is published on host port **4041**
+(`http://localhost:4041`).
+
+### New app features
+
+Beyond upstream npmgraph, this fork's web UI adds:
+
+- **Interactive pan/zoom** on the SVG dependency graph, with a reset control.
+- An expanded **Export menu**: export the graph as **SVG, PNG, JSON, DOT,
+  Mermaid, CSV, or Markdown**, copy exports to the clipboard, and use
+  **"Save & copy link"** to persist a graph and get a shareable link (backed by
+  the HTTP API).
+- A graph **Health scorecard** in the Report pane.
+
+### MCP server
+
+The `mcp/` directory contains `@npmgraph/mcp`, a
+[Model Context Protocol](https://modelcontextprotocol.io) server. See
+[`mcp/README.md`](./mcp/README.md) for full details. In brief, it exposes:
+
+- npm **dependency-graph** tools (walk a package's tree → JSON or Graphviz DOT).
+- An **OSV vulnerability audit** of resolved versions.
+- **Package comparison** (diff direct dependencies of two specs).
+- **Neo4j-backed impact queries** over stored graphs: direct/transitive
+  dependents, shortest dependency path, common dependencies, and most-depended-on
+  packages (plus arbitrary Cypher).
+
+The registry-backed tools need no configuration; the impact queries require Neo4j.
+You can attach the server to Claude Code with `claude mcp add` (see
+`mcp/README.md` for the stdio config and environment variables).
+
+### Environment variables
+
+Copy `.env.example` to `.env` and fill in the values it documents:
+
+- `BUGSNAG_KEY` — Bugsnag error-reporting key (baked into the build).
+- `NGROK_AUTHTOKEN` — authtoken for the ngrok public-tunnel service.
+- `NEO4J_PASSWORD` — password for the Neo4j database (used by the `graph` profile
+  services).
