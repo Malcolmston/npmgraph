@@ -1,0 +1,67 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  margin-bottom: 0.5em;
+}
+
+.tool {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: solid 1px var(--bg1);
+  border-radius: var(--rad-sm);
+  background: var(--bg0);
+  padding: 8px 10px;
+}
+
+.toolTitle {
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.input {
+  flex: 1;
+  border: solid 1px var(--bg1);
+  border-radius: var(--rad-sm);
+  background: var(--bg1);
+  padding: 4px 6px;
+  min-width: 8em;
+  color: var(--text);
+}
+
+.button {
+  cursor: pointer;
+  border: solid 1px var(--accent);
+  border-radius: var(--rad-sm);
+  background: var(--accent);
+  padding: 4px 10px;
+  color: #fff;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.results {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 0.9em;
+}
+
+.path {
+  font-size: 0.9em;
+  word-break: break-word;
+}
+
+.empty {
+  color: var(--text-dim);
+  font-size: 0.9em;
+}

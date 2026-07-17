@@ -9,15 +9,20 @@
   padding-left: calc(var(--padding) + 1px);
 }
 
-.zoomFitHeight {
-  border-top-right-radius: var(--rad-sm);
-  border-bottom-right-radius: var(--rad-sm);
-  padding-right: calc(var(--padding) + 1px);
-}
-
 .zoom11 {
   border-width: 1px 0;
   padding: 0 0.5em;
   width: fit-content;
   font-size: 1em;
+}
+
+.zoomFitHeight {
+  /* middle button — no corner rounding */
+  border-left-width: 0;
+}
+
+.resetView {
+  border-top-right-radius: var(--rad-sm);
+  border-bottom-right-radius: var(--rad-sm);
+  padding-right: calc(var(--padding) + 1px);
 }

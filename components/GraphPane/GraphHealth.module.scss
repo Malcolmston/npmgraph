@@ -1,0 +1,94 @@
+@use '../../lib/root.module.scss' as *;
+
+.root {
+  display: flex;
+  align-items: stretch;
+  gap: 1em;
+  margin-bottom: 0.5em;
+
+  @include tight-screen {
+    flex-direction: column;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  flex: 1;
+  gap: 6px;
+
+  @include tight-screen {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat,
+.statWarn {
+  border: solid 1px var(--bg1);
+  border-radius: var(--rad-sm);
+  background: var(--bg0);
+  padding: 6px 8px;
+}
+
+.statWarn {
+  border-color: var(--stroke-red);
+}
+
+.statValue {
+  font-weight: 600;
+  font-size: 1.15em;
+  line-height: 1.2;
+}
+
+.statWarn .statValue {
+  color: var(--stroke-red);
+}
+
+.statLabel {
+  opacity: 0.75;
+  color: var(--text);
+  font-size: 0.8em;
+}
+
+.statHint {
+  opacity: 0.55;
+  font-size: 0.72em;
+}
+
+$grades: (
+  'A': #2e7d32,
+  'B': #689f38,
+  'C': #f9a825,
+  'D': #ef6c00,
+  'F': #c62828,
+);
+
+.grade {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--rad-sm);
+  padding: 0.5em 0.9em;
+  min-width: 5em;
+  color: #fff;
+}
+
+@each $letter, $color in $grades {
+  .grade#{$letter} {
+    @extend .grade;
+
+    background: $color;
+  }
+}
+
+.gradeLetter {
+  font-weight: 700;
+  font-size: 2.4em;
+  line-height: 1;
+}
+
+.gradeScore {
+  opacity: 0.9;
+  font-size: 0.8em;
+}

@@ -5,6 +5,7 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { $, $$optional, $closestOptional, $optional } from 'select-dom';
@@ -46,6 +47,7 @@ import './graphviz.css';
 
 import GraphDiagramDownloadButton from './GraphDiagramDownloadButton.tsx';
 import { GraphDiagramZoomButtons } from './GraphDiagramZoomButtons.tsx';
+import usePanZoom from './usePanZoom.ts';
 import type { DependencyKey, GraphState } from './graph_util.ts';
 import {
   composeDOT,
@@ -77,6 +79,15 @@ export default function GraphDiagram({ activity }: { activity: LoadActivity }) {
   const [zoom] = useHashParam(PARAM_ZOOM);
   const [sizing] = useHashParam(PARAM_SIZING);
   const [graphviz, graphvizLoading] = useGraphviz();
+
+  // Drag-to-pan + wheel-to-zoom on the rendered SVG
+  const graphRef = useRef<HTMLDivElement>(null);
+  const { reset: resetView } = usePanZoom(graphRef, diagramElement);
+
+  // Reset pan/zoom when the fit-mode changes so the two don't fight each other
+  useEffect(() => {
+    resetView();
+  }, [zoom, resetView]);
 
   // Stable query array for use in effects
   const sortedQuery = useMemo(() => [...query].toSorted(), [query]);
@@ -335,10 +346,14 @@ export default function GraphDiagram({ activity }: { activity: LoadActivity }) {
   return (
     <div className={styles.root}>
       <div className={styles.graphControls}>
-        <GraphDiagramZoomButtons />
+        <GraphDiagramZoomButtons onResetView={resetView} />
         <GraphDiagramDownloadButton />
       </div>
-      <div className={styles.graph} onClick={handleGraphClick}></div>
+      <div
+        className={styles.graph}
+        ref={graphRef}
+        onClick={handleGraphClick}
+      ></div>
     </div>
   );
 }

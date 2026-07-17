@@ -132,3 +132,18 @@ export function OffsiteLinkIcon(props: IconProps) {
 export function XIcon(props: IconProps) {
   return <Icon name="x" {...props} strokePath="M 3,3 13,13 M 13,3 3,13" />;
 }
+
+export function ResetViewIcon(props: IconProps) {
+  // Crosshair-in-frame: "recenter / reset zoom & pan"
+  return (
+    <Icon
+      name="reset-view"
+      {...props}
+      strokePath="M 1,4 V 1 H 4 M 12,1 h 3 v 3 M 15,12 v 3 h -3 M 4,15 H 1 v -3 M 8,5 V 11 M 5,8 h 6"
+    />
+  );
+}
+
+export function CaretDownIcon(props: IconProps) {
+  return <Icon name="caret-down" {...props} strokePath="M 4,6 8,10 12,6" />;
+}

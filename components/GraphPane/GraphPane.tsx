@@ -5,7 +5,9 @@ import useCollapse from '../../lib/useCollapse.ts';
 import { ExternalLink } from '../ExternalLink.tsx';
 import type { GraphState } from '../GraphDiagram/graph_util.ts';
 import { Pane } from '../Pane.tsx';
+import GraphHealth from './GraphHealth.tsx';
 import * as styles from './GraphPane.module.scss';
+import ImpactPanel from './ImpactPanel.tsx';
 import { ReportItem } from './reports/ReportItem.tsx';
 import { analyzeLicenses } from './reports/analyzeLicenses.ts';
 import { analyzeMaintainers } from './reports/analyzeMaintainers.tsx';
@@ -69,6 +71,14 @@ export default function GraphPane({
           <span>(Shift-click modules in graph to expand/collapse)</span>
         )}
       </div>
+
+      <ReportSection title="Health">
+        <GraphHealth graph={graph} />
+      </ReportSection>
+
+      <ReportSection title="Graph database">
+        <ImpactPanel />
+      </ReportSection>
 
       <ReportSection title="Modules">
         <ReportItem data={moduleAnalysis} reporter={modulesAll} />

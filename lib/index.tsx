@@ -12,6 +12,7 @@ import { DiagramTitle } from './DiagramTitle.tsx';
 import LoadActivity from './LoadActivity.ts';
 import { syncPackagesHash } from './ModuleCache.ts';
 import { setActivityForRequestCache } from './fetchJson.ts';
+import { maybeRestoreSavedGraph } from './savedGraph.ts';
 import { setActivityForApp } from './useActivity.ts';
 
 function isValidJS(src: string) {
@@ -81,6 +82,10 @@ window.addEventListener('load', () => {
     createRoot($('body')).render(<Unsupported unsupported={unsupported} />);
     return;
   }
+
+  // If arriving via a shared "?saved=<id>" link, restore that graph's URL
+  // state and reload before doing anything else.
+  if (maybeRestoreSavedGraph()) return;
 
   // Make sure module cache is synced with hash param
   syncPackagesHash();

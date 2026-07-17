@@ -6,12 +6,20 @@ import {
 } from '../../lib/constants.ts';
 import { cn } from '../../lib/dom.ts';
 import useHashParam from '../../lib/useHashParam.ts';
-import { ZoomHorizontalIcon, ZoomVerticalIcon } from '../Icons.tsx';
+import {
+  ResetViewIcon,
+  ZoomHorizontalIcon,
+  ZoomVerticalIcon,
+} from '../Icons.tsx';
 import * as utilities from '../utilities.module.scss';
 import * as parentStyles from './GraphDiagram.module.scss';
 import * as styles from './GraphDiagramZoomButtons.module.scss';
 
-export function GraphDiagramZoomButtons() {
+export function GraphDiagramZoomButtons({
+  onResetView,
+}: {
+  onResetView?: () => void;
+}) {
   const [zoom, setZoom] = useHashParam(PARAM_ZOOM);
   return (
     <div className={styles.root}>
@@ -56,6 +64,14 @@ export function GraphDiagramZoomButtons() {
         type="button"
       >
         <ZoomVerticalIcon />
+      </button>
+      <button
+        className={cn(styles.resetView, utilities.brightHover)}
+        onClick={() => onResetView?.()}
+        title="Reset pan & zoom"
+        type="button"
+      >
+        <ResetViewIcon />
       </button>
     </div>
   );
