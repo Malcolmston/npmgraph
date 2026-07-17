@@ -1,0 +1,9 @@
+export type GraphNode = { key: string; name: string; version: string; level: number; deprecated: boolean; vulnerabilities?: number; unpackedSize?: number; license?: string };
+export type GraphEdge = { from: string; to: string; type: string };
+export type DependencyGraph = { root: string; nodeCount: number; edgeCount: number; nodes: GraphNode[]; edges: GraphEdge[] };
+export type Maintainer = { name?: string; email?: string };
+export type PackageScore = { source: string; final: number; quality?: number; popularity?: number; maintenance?: number };
+export type PackageInfo = { name: string; version: string; description?: string; license?: string; homepage?: string; repository?: string; keywords: string[]; deprecated: string | boolean; maintainers: Maintainer[]; author?: Maintainer; dist: { unpackedSize?: number; fileCount?: number }; downloadsLastMonth: number | null; score: PackageScore | null };
+export type VulnerablePackage = { key: string; name: string; version: string; vulnerabilities: string[] };
+export type AuditResult = { root: string; scanned: number; vulnerablePackages: VulnerablePackage[]; totalVulnerabilities: number };
+export type NodeCategory = 'root' | 'transitive' | 'deprecated' | 'vulnerable';
