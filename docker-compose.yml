@@ -1,0 +1,141 @@
+services:
+  # Production-style build served by nginx.
+  # Run with:  docker compose up --build
+  # Then open: http://localhost:8080
+  npmgraph:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUGSNAG_KEY: ${BUGSNAG_KEY:-}
+    ports:
+      # Host 8080/8090 were busy on this machine; 8091 avoids the conflict.
+      - '8091:80'
+    restart: unless-stopped
+    # `docker compose up --watch` rebuilds the static site when source changes.
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+          ignore:
+            - node_modules/
+            - dist/
+            - .parcel-cache/
+            - mcp/
+            - .git/
+
+  # Public tunnel to the web app via ngrok — gives you a shareable https URL.
+  # Requires an ngrok authtoken: set NGROK_AUTHTOKEN in your environment or .env
+  # (get one free at https://dashboard.ngrok.com/get-started/your-authtoken).
+  # After `up`, find the public URL in the ngrok inspector at http://localhost:4040
+  # or via `docker compose logs ngrok`.
+  ngrok:
+    image: ngrok/ngrok:latest
+    # Pin the reserved static domain so the public URL survives restarts.
+    # Free ngrok accounts get one static domain; set NGROK_DOMAIN in .env.
+    command: ['http', '--domain=${NGROK_DOMAIN}', 'npmgraph:80']
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+    ports:
+      # 4040 was busy (another ngrok on the host); use 4041 for the inspector.
+      - '4041:4040'
+    depends_on:
+      - npmgraph
+    restart: unless-stopped
+
+  # Hot-reload dev server (Parcel). Enable with the "dev" profile:
+  #   docker compose --profile dev up dev
+  # Then open: http://localhost:1234
+  dev:
+    image: node:24-slim
+    working_dir: /app
+    profiles: ['dev']
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm start -- --host 0.0.0.0"
+    environment:
+      BUGSNAG_KEY: ${BUGSNAG_KEY:-}
+    ports:
+      - '1234:1234'
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  # ----------------------------------------------------------------------------
+  # Graph database (Neo4j) + the npmgraph MCP server that persists dependency
+  # graphs into it via the @mstone6969/prorm ORM. Enable with the "graph"
+  # profile so the plain web app stays lightweight:
+  #   docker compose --profile graph up neo4j        # just the DB
+  #   docker compose --profile graph run --rm mcp    # stdio MCP server (for a client)
+  # Neo4j Browser: http://localhost:7474  (bolt on 7687)
+  # ----------------------------------------------------------------------------
+  neo4j:
+    image: neo4j:5-community
+    profiles: ['graph']
+    environment:
+      NEO4J_AUTH: 'neo4j/${NEO4J_PASSWORD:-npmgraph123}'
+      NEO4J_server_memory_pagecache_size: 512M
+    ports:
+      - '7474:7474'
+      - '7687:7687'
+    volumes:
+      - neo4j-data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:7474 || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  mcp:
+    build:
+      context: .
+      dockerfile: mcp/Dockerfile
+    profiles: ['graph']
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    environment:
+      NEO4J_URI: 'neo4j://neo4j:7687'
+      NEO4J_USER: 'neo4j'
+      NEO4J_PASSWORD: '${NEO4J_PASSWORD:-npmgraph123}'
+    # stdio MCP server — keep stdin open so a client can drive it
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ./mcp/src
+        - action: rebuild
+          path: ./mcp/package.json
+
+  # HTTP API (same image, different entrypoint) — backs the web app's impact
+  # queries and Save-graph share links. nginx proxies /api to this service.
+  api:
+    build:
+      context: .
+      dockerfile: mcp/Dockerfile
+    profiles: ['graph']
+    command: ['node', 'dist/http.js']
+    # Neo4j connection comes from the environment (.env). Defaults point at the
+    # local `neo4j` service; set NEO4J_URI in .env (e.g. an AuraDB URI) to use a
+    # hosted database instead — no local neo4j container required.
+    environment:
+      PORT: '3100'
+      # Package shown at the bare /mcp URL (no package in the path).
+      DEFAULT_PACKAGE: '${DEFAULT_PACKAGE:-expo}'
+      NEO4J_URI: '${NEO4J_URI:-neo4j://neo4j:7687}'
+      NEO4J_USER: '${NEO4J_USER:-neo4j}'
+      NEO4J_PASSWORD: '${NEO4J_PASSWORD:-npmgraph123}'
+      NEO4J_DATABASE: '${NEO4J_DATABASE:-}'
+    ports:
+      - '3100:3100'
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: ./mcp/src
+        - action: rebuild
+          path: ./mcp/package.json
+
+volumes:
+  neo4j-data:

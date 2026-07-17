@@ -5,3 +5,5 @@
 art/**/*.svg.*.svg  # inkscape backup files
 dist
 node_modules
+.env
+.env.local

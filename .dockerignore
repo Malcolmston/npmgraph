@@ -1,0 +1,12 @@
+node_modules
+dist
+.parcel-cache
+.git
+.github
+.claude
+*.log
+npm-debug.log*
+.DS_Store
+Dockerfile
+docker-compose.yml
+.dockerignore

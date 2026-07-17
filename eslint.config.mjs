@@ -93,6 +93,9 @@ const disabledRules = [
 ];
 
 export default [
+  // The MCP server and the Expo app are standalone packages with their own
+  // tsconfig/toolchains — don't lint them with the web app's xo config.
+  { ignores: ['mcp/**', 'mobile/**', 'dist/**'] },
   ...xoConfigs,
   ...xoReactConfigs,
   {
