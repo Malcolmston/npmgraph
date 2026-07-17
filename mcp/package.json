@@ -1,0 +1,35 @@
+{
+  "name": "@npmgraph/mcp",
+  "version": "0.1.0",
+  "description": "MCP server exposing npm dependency-graph queries (JSON/DOT), with optional Neo4j persistence via @mstone6969/prorm",
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm@10.30.3",
+  "bin": {
+    "npmgraph-mcp": "dist/index.js",
+    "npmgraph-http": "dist/http.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "start": "node dist/index.js",
+    "test": "node --import \"data:text/javascript,import%7BregisterHooks%7Dfrom%22node%3Amodule%22%3Bimport%7BexistsSync%7Dfrom%22node%3Afs%22%3Bimport%7BfileURLToPath%7Dfrom%22node%3Aurl%22%3BregisterHooks(%7Bresolve(s%2Cc%2Cn)%7Bif((s.startsWith(%22.%2F%22)%7C%7Cs.startsWith(%22..%2F%22))%26%26s.endsWith(%22.js%22)%26%26c.parentURL)%7Bconst%20u%3Dnew%20URL(s.slice(0%2C-3)%2B%22.ts%22%2Cc.parentURL)%3Bif(existsSync(fileURLToPath(u)))return%20n(s.slice(0%2C-3)%2B%22.ts%22%2Cc)%3B%7Dreturn%20n(s%2Cc)%3B%7D%7D)%3B\" --test src/*.test.ts",
+    "serve": "node dist/http.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@hpcc-js/wasm-graphviz": "^1.24.1",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@mstone6969/prorm": "^1.1.0",
+    "semver": "^7.7.4",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/semver": "^7.7.1",
+    "typescript": "^5.9.3"
+  }
+}

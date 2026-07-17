@@ -5,10 +5,17 @@ pre-commit:
 
     lint:
       glob: '**/*.{js,ts,jsx,tsx}'
+      # mcp/ and mobile/ have their own lint/test toolchains (own tsconfig).
+      exclude:
+        - 'mcp/**'
+        - 'mobile/**'
       run: pnpm run lint {staged_files}
 
     test:
       glob: '**/*.test.{js,ts,jsx,tsx}'
+      exclude:
+        - 'mcp/**'
+        - 'mobile/**'
       run: pnpm run test:unit {staged_files}
 
 commit-msg:
