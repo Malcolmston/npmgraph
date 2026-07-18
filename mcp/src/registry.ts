@@ -1,6 +1,9 @@
 import { maxSatisfying, valid, validRange } from 'semver';
 
-const DEFAULT_REGISTRY = process.env.NPM_REGISTRY ?? 'https://registry.npmjs.org';
+// `||` (not `??`) so an empty NPM_REGISTRY env still falls back to the public
+// registry — compose passes through env vars as "" when unset.
+const DEFAULT_REGISTRY =
+  process.env.NPM_REGISTRY || 'https://registry.npmjs.org';
 
 export type PackageVersion = {
   name: string;

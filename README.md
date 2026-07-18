@@ -239,6 +239,35 @@ You can attach the server to Claude Code with `claude mcp add` (see
 Copy `.env.example` to `.env` and fill in the values it documents:
 
 - `BUGSNAG_KEY` — Bugsnag error-reporting key (baked into the build).
-- `NGROK_AUTHTOKEN` — authtoken for the ngrok public-tunnel service.
-- `NEO4J_PASSWORD` — password for the Neo4j database (used by the `graph` profile
-  services).
+- `NGROK_AUTHTOKEN` / `NGROK_DOMAIN` — authtoken and reserved static domain for
+  the ngrok public-tunnel service (the domain pins the URL across restarts).
+- `NEO4J_URI` / `NEO4J_USER` / `NEO4J_PASSWORD` / `NEO4J_DATABASE` — Neo4j
+  connection. Leave `NEO4J_URI` empty to use the local `neo4j` container, or set
+  it to an AuraDB URI for a hosted database.
+- `NPM_REGISTRY` — npm registry to resolve from. Empty = public registry; the
+  offline overlay points it at the verdaccio mirror.
+- `API_WRITE_TOKEN` — shared secret for the write endpoints (`POST /api/store`,
+  `/api/graphs`). Set it on any publicly-exposed deployment; callers then send
+  `Authorization: Bearer <token>`. Empty = writes open (local dev only).
+
+### Offline mirror
+
+The whole stack can run with no cloud dependencies — a local Neo4j plus a
+[verdaccio](https://verdaccio.org/) npm-registry mirror. Once a package has been
+indexed, it resolves with **no internet at all**.
+
+```bash
+# Bring up the offline stack (local Neo4j + verdaccio + API + web).
+docker compose -f docker-compose.yml -f docker-compose.offline.yml \
+  --profile graph up -d npmgraph neo4j verdaccio api
+
+# Pre-warm the caches: builds each package's graph through verdaccio (caching
+# every packument on disk) and persists it to the local Neo4j.
+node scripts/prewarm.mjs packages.txt        # one package name per line
+```
+
+After pre-warming, cached packages render even with the machine disconnected —
+verdaccio serves packuments/tarballs from disk and the graphs come straight from
+the local Neo4j. Vulnerability audit (OSV), download counts, and quality scores
+are the only features that need the internet, and they degrade gracefully when
+it's absent.

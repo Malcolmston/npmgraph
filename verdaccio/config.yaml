@@ -1,0 +1,47 @@
+# Verdaccio config for the offline npm-registry mirror.
+# Proxies the public registry and caches everything it fetches, so a package
+# indexed once resolves with no internet afterwards.
+storage: /verdaccio/storage
+plugins: /verdaccio/plugins
+
+# Listen on all interfaces inside the container.
+listen: 0.0.0.0:4873
+
+# Public npm registry, used as an upstream cache source.
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+    # Cache tarballs on disk so they survive going offline.
+    cache: true
+    # Keep serving cached metadata when the uplink is slow/unreachable.
+    max_fails: 30
+    fail_timeout: 5m
+    timeout: 30s
+    maxage: 30m
+
+packages:
+  '@*/*':
+    access: $all
+    publish: $all
+    unpublish: $all
+    proxy: npmjs
+  '**':
+    access: $all
+    publish: $all
+    unpublish: $all
+    proxy: npmjs
+
+# Don't phone home.
+telemetry:
+  enabled: false
+
+# Serve stale cache instead of erroring when the uplink is unreachable (offline).
+server:
+  keepAliveTimeout: 60
+
+log: { type: stdout, format: pretty, level: warn }
+
+# Anyone on the local network can read/write (it's a local mirror).
+security:
+  api:
+    legacy: true

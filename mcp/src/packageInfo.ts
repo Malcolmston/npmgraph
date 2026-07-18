@@ -1,4 +1,4 @@
-const REGISTRY = process.env.NPM_REGISTRY ?? 'https://registry.npmjs.org';
+const REGISTRY = process.env.NPM_REGISTRY || 'https://registry.npmjs.org';
 
 type Person = { name?: string; email?: string; url?: string } | string;
 
