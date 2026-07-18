@@ -1,0 +1,56 @@
+# Fork-only CI (npmgraph fork).
+#
+# This workflow is specific to THIS fork and tests the extra packages that do
+# not exist upstream: mcp/ and mobile/. The upstream workflows (ci.yml, pr.yml,
+# schedule.yml) only cover the root web app and are intentionally left
+# untouched to avoid merge conflicts when syncing with npmgraph/npmgraph.
+name: Fork CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # mcp/ is a standalone pnpm package (own pnpm-lock.yaml, not in the root
+  # workspace). Its `test` script uses `node --test` with an inline module
+  # resolve hook that maps ./*.js imports to ./*.ts, so no build step is
+  # required and the tests are pure (no network / Neo4j needed).
+  mcp:
+    name: mcp tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          # module.registerHooks (used by the test loader) requires Node >= 22.15;
+          # match the package's @types/node ^24.
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: mcp/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  # mobile/ is a standalone Expo SDK 54 app (own package-lock.json, not in the
+  # root workspace). `npm test` runs jest via the jest-expo preset entirely in
+  # Node, so no native build is needed.
+  mobile:
+    name: mobile tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npm test
