@@ -117,6 +117,26 @@ function requireNeo4j() {
   }
 }
 
+// Gate write endpoints behind a shared secret. When API_WRITE_TOKEN is set
+// (e.g. on a publicly-tunnelled deployment) callers must present it as
+// `Authorization: Bearer <token>` or `x-api-key: <token>`; otherwise anyone who
+// finds the URL could write to the database. When unset, writes stay open so
+// local development is unchanged.
+function requireWriteAuth(req: IncomingMessage) {
+  const expected = process.env.API_WRITE_TOKEN;
+  if (!expected) return;
+  const header = req.headers['authorization'];
+  const bearer =
+    typeof header === 'string' && header.startsWith('Bearer ')
+      ? header.slice(7).trim()
+      : undefined;
+  const apiKey = req.headers['x-api-key'];
+  const provided = bearer ?? (typeof apiKey === 'string' ? apiKey : undefined);
+  if (provided !== expected) {
+    throw new HttpError(401, 'Missing or invalid API write token.');
+  }
+}
+
 async function route(
   req: IncomingMessage,
   url: URL,
@@ -179,6 +199,7 @@ async function route(
 
   // Saved graphs (share links)
   if (pathname === '/api/graphs' && method === 'POST') {
+    requireWriteAuth(req);
     requireNeo4j();
     const body = await readJson(req);
     const id = await saveGraphState({
@@ -189,6 +210,7 @@ async function route(
   }
 
   if (pathname === '/api/store' && method === 'POST') {
+    requireWriteAuth(req);
     requireNeo4j();
     const body = await readJson(req);
     const pkg = String(body.package ?? '').trim();
